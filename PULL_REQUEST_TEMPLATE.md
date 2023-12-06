@@ -18,7 +18,7 @@
 
 **5. Before you request a review, make sure that**
 
--   You self reviwed this PR and left comments where needed to speed the review process
+-   You self reviewed this PR and left comments where needed to speed the review process
 -   Your code is [DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself)
 -   Your code easy to understand. Leave comments explaning logic that might harder to understand
 -   You have split complex functions/components into smaller ones

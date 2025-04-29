@@ -1,0 +1,46 @@
+name: Task form
+description: File a task ticket
+title: "[Task]: "
+assignees:
+    - octocat
+body:
+    - type: textarea
+      id: description
+      attributes:
+          label: Definition of done
+      validations:
+          required: true
+
+    - type: textarea
+      id: links
+      attributes:
+          label: Links
+      validations:
+          required: false
+
+    - type: textarea
+      id: rabbit-holes
+      attributes:
+          label: Rabbit holes
+      validations:
+          required: false
+
+    - type: textarea
+      id: designs
+      attributes:
+          label: Designs
+      validations:
+          required: false
+
+    - type: dropdown
+      id: story_points
+      attributes:
+          label: Story Points
+          description: How many story points do you think the work is worth?
+          options:
+              - 1
+              - 2
+              - 3
+              - 5
+      validations:
+          required: true

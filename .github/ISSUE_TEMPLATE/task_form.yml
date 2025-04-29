@@ -11,6 +11,19 @@ body:
       validations:
           required: true
 
+    - type: dropdown
+      id: story_points
+      attributes:
+          label: Story Points
+          description: How many story points do you think the work is worth?
+          options:
+              - 1
+              - 2
+              - 3
+              - 5
+      validations:
+          required: true
+
     - type: textarea
       id: links
       attributes:
@@ -31,16 +44,3 @@ body:
           label: Designs
       validations:
           required: false
-
-    - type: dropdown
-      id: story_points
-      attributes:
-          label: Story Points
-          description: How many story points do you think the work is worth?
-          options:
-              - 1
-              - 2
-              - 3
-              - 5
-      validations:
-          required: true

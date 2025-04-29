@@ -1,22 +1,35 @@
 name: Bug Report
 description: File a bug report.
 title: "[Bug]: "
-labels: ["bug", "triage"]
-projects: ["octo-org/1", "octo-org/44"]
+labels: ["bug"]
+# projects: ["octo-org/1", "octo-org/44"]
 assignees:
-  - octocat
+    - octocat
 body:
-  - type: markdown
-    attributes:
-      value: |
-        Thanks for taking the time to fill out this bug report!
-  
-  - type: textarea
-    id: description
-    attributes:
-      label: What happened?
-      description: Also tell us, what did you expect to happen?
-      placeholder: Tell us what you see!
-      value: "A bug happened!"
-    validations:
-      required: true  
+    - type: markdown
+      attributes:
+          value: |
+              Thanks for taking the time to fill out this bug report!
+
+    - type: textarea
+      id: description
+      attributes:
+          label: What happened?
+          description: Also tell us, what did you expect to happen?
+          placeholder: Tell us what you see!
+          value: "A bug happened!"
+      validations:
+          required: true
+
+    - type: dropdown
+      id: story_points
+      attributes:
+          label: Story Points
+          description: How many story points do you think the work is worth?
+          options:
+              - 1
+              - 2
+              - 3
+              - 5
+      validations:
+          required: true

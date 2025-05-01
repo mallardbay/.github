@@ -1,0 +1,23 @@
+name: Feature form
+description: Create a feature
+title: "[Feature]: "
+labels: ["feature"]
+body:
+    - type: textarea
+      id: description
+      attributes:
+          label: Link to Specs
+      validations:
+          required: true
+
+    - type: textarea
+      id: appetite
+      attributes:
+          label: Appetite
+      validations:
+          required: true
+
+    - type: textarea
+      id: notes
+      attributes:
+          label: Notes

@@ -1,8 +1,6 @@
 name: Task form
-description: File a task ticket
+description: Create a task
 title: "[Task]: "
-assignees:
-    - octocat
 body:
     - type: textarea
       id: description
@@ -11,6 +9,8 @@ body:
       validations:
           required: true
 
+    # DO NOT EDIT THE NAME OF THIS FIELD
+    # It's used to integrate with porject fields
     - type: dropdown
       id: story_points
       attributes:

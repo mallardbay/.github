@@ -2,6 +2,7 @@ name: Feature form
 description: Create a feature
 title: "[Feature]: "
 labels: ["feature"]
+type: feature
 body:
     - type: textarea
       id: description

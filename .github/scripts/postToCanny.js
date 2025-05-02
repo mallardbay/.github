@@ -31,6 +31,13 @@ async function getRepos() {
             headers: { Authorization: `Bearer ${githubToken}` },
         }
     );
+
+    if (!res.ok) {
+        const text = await res.text();
+        console.error("❌ Canny error:", text);
+        process.exit(1);
+    }
+
     const repos = await res.json();
     const excludedRepos = [
         ".github",

@@ -9,7 +9,6 @@ on:
 jobs:
     post-to-canny:
         runs-on: ubuntu-latest
-
         steps:
             - name: Checkout this repo
               uses: actions/checkout@v3
@@ -24,7 +23,7 @@ jobs:
 
             - name: Run AI Canny Poster
               env:
-                  GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_GITHUB_TOKEN }}
+                  GITHUB_TOKEN: ${{ secrets.TEMP_GITHUB_TOKEN }}
                   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
                   CANNY_API_KEY: ${{ secrets.CANNY_API_KEY }}
                   GITHUB_ORG: ${{ github.repository_owner}}

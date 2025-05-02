@@ -24,7 +24,7 @@ jobs:
 
             - name: Run AI Canny Poster
               env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_GITHUB_TOKEN }}
                   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
                   CANNY_API_KEY: ${{ secrets.CANNY_API_KEY }}
                   GITHUB_ORG: ${{ github.repository_owner}}

@@ -4,7 +4,6 @@ on:
     schedule:
         # - cron: "0 17 * * *" # Daily at 5 PM UTC
         - cron: "* * * * *" # ⏰ Every minute
-    workflow_dispatch:
 
 jobs:
     post-to-canny:

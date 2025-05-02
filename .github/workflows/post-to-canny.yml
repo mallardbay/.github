@@ -1,6 +1,7 @@
 name: Post Daily AI Summaries to Canny
 
 on:
+    workflow_dispatch:
     schedule:
         # - cron: "0 17 * * *" # Daily at 5 PM UTC
         - cron: "* * * * *" # ⏰ Every minute
@@ -26,5 +27,7 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
                   CANNY_API_KEY: ${{ secrets.CANNY_API_KEY }}
-                  GITHUB_ORG: ${{ github.repository_owner }}
+                  GITHUB_ORG: ${{ github.repository_owner
+
+                  }}
               run: node .github/scripts/postToCanny.js

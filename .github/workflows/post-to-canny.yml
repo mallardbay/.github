@@ -1,0 +1,30 @@
+name: Post Daily AI Summaries to Canny
+
+on:
+    schedule:
+        # - cron: "0 17 * * *" # Daily at 5 PM UTC
+        - cron: "* * * * *" # ⏰ Every minute
+    workflow_dispatch:
+
+jobs:
+    post-to-canny:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout this repo
+              uses: actions/checkout@v3
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v3
+              with:
+                  node-version: "20"
+
+            - name: Install dependencies
+              run: npm install node-fetch@2 openai
+
+            - name: Run AI Canny Poster
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+                  CANNY_API_KEY: ${{ secrets.CANNY_API_KEY }}
+              run: node .github/scripts/postToCanny.js

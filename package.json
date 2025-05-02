@@ -1,0 +1,12 @@
+{
+    "name": "mb-github",
+    "version": "1.0.0",
+    "main": "index.js",
+    "repository": "git@github.com:mallardbay/.github.git",
+    "author": "mfrr1118 <mfrr@me.com>",
+    "license": "MIT",
+    "dependencies": {
+        "node-fetch": "2",
+        "openai": "^4.96.2"
+    }
+}

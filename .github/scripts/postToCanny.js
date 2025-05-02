@@ -9,6 +9,11 @@ const today = new Date();
 const yesterday = new Date(today);
 yesterday.setDate(today.getDate() - 1);
 
+if (!githubToken) {
+    console.error("❌ Missing GITHUB_TOKEN environment variable.");
+    process.exit(1);
+}
+
 if (!org) {
     console.error("❌ Missing GITHUB_ORG environment variable.");
     process.exit(1);

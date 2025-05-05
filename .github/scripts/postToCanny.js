@@ -189,6 +189,7 @@ async function main() {
         const projectSummary = await summarizeProjectPRs(repo.name, summaries);
         details += `# 📦 ${repo.name}\n\n${projectSummary}\n\n`;
 
+        // TODO images are not currently working because we don't post them in the dev=>prod PRs. Fix this
         summaries.forEach(({ images }) => {
             images.forEach((url) => {
                 details += `![Image](${url})\n\n`;
@@ -196,6 +197,13 @@ async function main() {
         });
     }
 
+    // Bail if there's nothing to report, do this before adding the quote
+    if (!details.trim()) {
+        console.log("📭 No PRs merged yesterday.");
+        return;
+    }
+
+    // Credit where it's due
     if (allContributors.size) {
         const kudosTo = Array.from(allContributors).filter(
             (name) => name !== "semantic-release-bot"
@@ -212,11 +220,6 @@ async function main() {
 
     if (allPRLinks.length) {
         details += `# 🔗 Pull Requests\n${allPRLinks.join("\n")}\n\n`;
-    }
-
-    if (!details.trim()) {
-        console.log("📭 No PRs merged yesterday.");
-        return;
     }
 
     await postToCanny({ title, details });

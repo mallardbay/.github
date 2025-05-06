@@ -3,11 +3,13 @@ import type { slides_v1 } from "googleapis";
 import fetch from "node-fetch";
 import * as path from "path";
 import OpenAI from "openai";
+import { WebClient } from "@slack/web-api";
 
 const TEMPLATE_ID = "10XaYbPMpHJuo3MdE2HEnjFE-Neh6MZo_8IjagT7Nucg";
 const EDITORS = ["manny@mallardbay.com", "coco@mallardbay.com"];
 const MAX_BULLETS_PER_PAGE = 6;
 const MAX_IMAGES_PER_PAGE = 9;
+const SLACK_CHANNEL = "#dev-github-actions";
 
 const credentialsPath = ".github/scripts/googleCredentials.json";
 
@@ -52,9 +54,14 @@ async function main(): Promise<void> {
     const quote = await getInspirationQuote();
 
     console.log("📊 Creating slides...");
-    await createSlides(grouped, images, quote);
+    const presentationId = await createSlides(grouped, images, quote);
+    console.log("✅ Slide generation complete, posting to slack...");
 
-    console.log("Slide generation complete.");
+    await postToSlack(
+        `✅ Monthly Product Slides created: https://docs.google.com/presentation/d/${presentationId} \n \ncc @coco`
+    );
+
+    console.log("Done with slack!");
 }
 
 async function fetchRecentChangelogEntries(): Promise<ChangelogEntry[]> {
@@ -336,9 +343,7 @@ async function createSlides(grouped: any, images: any, quote: string) {
         },
     });
 
-    console.log(
-        `✅ Slides created: https://docs.google.com/presentation/d/${presentationId}`
-    );
+    return presentationId;
 }
 
 function getInsertionIndexAndLayouyId(
@@ -484,4 +489,13 @@ async function copyTemplatePresentation(
     });
 
     return fileId;
+}
+
+async function postToSlack(message) {
+    const slack = new WebClient(process.env.SLACK_TOKEN);
+
+    await slack.chat.postMessage({
+        channel: SLACK_CHANNEL,
+        text: message,
+    });
 }

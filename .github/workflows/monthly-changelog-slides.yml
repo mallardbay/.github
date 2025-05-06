@@ -29,3 +29,4 @@ jobs:
               env:
                   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
                   CANNY_API_KEY: ${{ secrets.CANNY_API_KEY }}
+                  SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}

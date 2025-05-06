@@ -87,7 +87,7 @@ async function summarizeProjectPRs(
     repo: string,
     summaries: Array<{ text: string }>
 ): Promise<string> {
-    const prompt = `Write a short, friendly, using emojis (not too many, and always at the beginning of text) summary of today's merged work in the '${repo}' project, use bullets:\n\n${summaries
+    const prompt = `Write a short, friendly, summary of today's merged work in the '${repo}' project, use bullets:\n\n${summaries
         .map((s) => s.text)
         .join("\n")}`;
     const res = await openai.chat.completions.create({

@@ -21,6 +21,10 @@ if (!process.env.CANNY_API_KEY) {
     throw new Error("Missing required env variable: CANNY_API_KEY");
 }
 
+if (!process.env.SLACK_TOKEN) {
+    throw new Error("Missing required env variable: SLACK_TOKEN");
+}
+
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
 
 interface ChangelogEntry {

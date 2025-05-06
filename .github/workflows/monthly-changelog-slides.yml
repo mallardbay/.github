@@ -21,7 +21,8 @@ jobs:
 
             - name: 🔐 Set up Google credentials
               run: |
-                  echo "${{ secrets.GOOGLE_CREDENTIALS_JSON }}" > .github/scripts/googleCredentials.json
+                  mkdir -p .github/scripts
+                  printf "%s" '${{ secrets.GOOGLE_CREDENTIALS_JSON }}' > .github/scripts/googleCredentials.json
 
             - name: 🚀 Run changelogSlides.ts
               run: yarn run monthly:release:slides

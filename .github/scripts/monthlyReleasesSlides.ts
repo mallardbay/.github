@@ -349,7 +349,7 @@ function getInsertionIndexAndLayouyId(
     if (!slides) throw new Error("No slides passed");
 
     // Insertion index
-    const insertionIndex = slides?.length - 2;
+    const insertionIndex = slides?.length - 1;
 
     // Layout id
     const layouts = presentation.layouts ?? [];

@@ -1,0 +1,31 @@
+name: Generate Changelog Slides
+
+on:
+    workflow_dispatch: # Manual trigger
+    schedule:
+        - cron: "0 13 * * MON" # Every Monday at 1pm UTC
+
+jobs:
+    generate:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: ⬇️ Checkout repo
+              uses: actions/checkout@v3
+
+            - name: 🟢 Set up Node.js
+              uses: actions/setup-node@v3
+
+            - name: 📦 Install dependencies
+              run: yarn
+
+            - name: 🔐 Set up Google credentials
+              run: |
+                  echo "${{ secrets.GOOGLE_CREDENTIALS_JSON }}" > .github/scripts/googleCredentials.json
+
+            - name: 🚀 Run changelogSlides.ts
+              run: npx tsx .github/scripts/changelogSlides.ts
+              env:
+                  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+                  CANNY_API_KEY: ${{ secrets.CANNY_API_KEY }}
+                  # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

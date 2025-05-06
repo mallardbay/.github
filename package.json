@@ -5,8 +5,19 @@
     "repository": "git@github.com:mallardbay/.github.git",
     "author": "mfrr1118 <mfrr@me.com>",
     "license": "MIT",
+    "type": "module",
     "dependencies": {
+        "googleapis": "^148.0.0",
         "node-fetch": "2",
         "openai": "^4.96.2"
+    },
+    "devDependencies": {
+        "@types/node": "^22.15.3",
+        "@types/node-fetch": "^2.6.12",
+        "tsx": "^4.19.4",
+        "typescript": "^5.8.3"
+    },
+    "scripts": {
+        "monthly:release:slides": "npx tsx .github/scripts/monthlyReleasesSlides.ts"
     }
 }

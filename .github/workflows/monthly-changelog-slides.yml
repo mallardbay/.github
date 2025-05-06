@@ -24,7 +24,7 @@ jobs:
                   echo "${{ secrets.GOOGLE_CREDENTIALS_JSON }}" > .github/scripts/googleCredentials.json
 
             - name: 🚀 Run changelogSlides.ts
-              run: npx tsx .github/scripts/changelogSlides.ts
+              run: yarn run monthly:release:slides
               env:
                   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
                   CANNY_API_KEY: ${{ secrets.CANNY_API_KEY }}

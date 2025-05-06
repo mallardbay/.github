@@ -62,7 +62,7 @@ async function main(): Promise<void> {
     console.log("✅ Slide generation complete, posting to slack...");
 
     await postToSlack(
-        `✅ Monthly Product Slides created: https://docs.google.com/presentation/d/${presentationId} \n \ncc @coco`
+        `✅ Monthly Product Slides created: https://docs.google.com/presentation/d/${presentationId} \n \ncc @Coco`
     );
 
     console.log("Done with slack!");

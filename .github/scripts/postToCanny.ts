@@ -6,8 +6,6 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
 const org: string | undefined = process.env.GITHUB_ORG;
 
 const today = new Date();
-const yesterday = new Date(today);
-yesterday.setDate(today.getDate() - 1);
 
 if (!githubToken) {
     console.error("❌ Missing GITHUB_TOKEN environment variable.");
@@ -21,9 +19,11 @@ if (!org) {
 
 main();
 
-function wasYesterday(dateStr: string): boolean {
+function mergedInLast24Hours(dateStr: string): boolean {
     const date = new Date(dateStr);
-    return date.toDateString() === yesterday.toDateString();
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    return diffInMs <= 24 * 60 * 60 * 1000; // 24 hours in ms
 }
 
 async function getRepos(): Promise<Array<{ name: string }>> {
@@ -62,7 +62,9 @@ async function getMergedPRs(repo: string): Promise<any[]> {
     );
     const prs = await res.json();
     console.log(`📌 Found ${prs.length} closed PRs in ${repo}`);
-    return prs.filter((pr: any) => pr.merged_at && wasYesterday(pr.merged_at));
+    return prs.filter(
+        (pr: any) => pr.merged_at && mergedInLast24Hours(pr.merged_at)
+    );
 }
 
 async function getCommits(
@@ -164,8 +166,8 @@ async function postToCanny({
 async function main(): Promise<void> {
     console.log("🚀 Generating grouped changelog...");
     const repos = await getRepos();
-    const yesterdayStr = yesterday.toISOString().split("T")[0];
-    const title = `Release Notes - ${yesterdayStr}`;
+
+    const title = `Release Notes - Past 24 Hours`;
     let details = "";
     const allContributors = new Set<string>();
     const allPRLinks: string[] = [];

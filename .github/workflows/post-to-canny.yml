@@ -9,21 +9,19 @@ jobs:
     post-to-canny:
         runs-on: ubuntu-latest
         steps:
-            - name: Checkout this repo
+            - name: ⬇️ Checkout repo
               uses: actions/checkout@v3
 
-            - name: Setup Node.js
+            - name: 🟢 Set up Node.js
               uses: actions/setup-node@v3
-              with:
-                  node-version: "20"
 
-            - name: Install dependencies
-              run: npm install node-fetch@2 openai
+            - name: 📦 Install dependencies
+              run: yarn
 
-            - name: Run AI Canny Poster
+            - name: 🚀 Run AI Canny Poster
               env:
                   GITHUB_TOKEN: ${{ secrets.POST_TO_CANNY_GITHUB_TOKEN }}
                   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
                   CANNY_API_KEY: ${{ secrets.CANNY_API_KEY }}
                   GITHUB_ORG: ${{ github.repository_owner}}
-              run: node .github/scripts/postToCanny.js
+              run: yarn run post:canny

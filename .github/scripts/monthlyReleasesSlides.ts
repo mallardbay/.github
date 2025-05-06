@@ -1,11 +1,12 @@
 import { google } from "googleapis";
+import type { slides_v1 } from "googleapis";
 import fetch from "node-fetch";
 import * as path from "path";
 import OpenAI from "openai";
 
-const TEMPLATE_ID = "1XVHQithNmY-JL-vL7hSS-UjTADN6C9C_bg1k8tU7amE";
-const PRESENTATION_AUTHOR = "manny@mallardbay.com";
-const MAX_BULLETS_PER_PAGE = 7;
+const TEMPLATE_ID = "10XaYbPMpHJuo3MdE2HEnjFE-Neh6MZo_8IjagT7Nucg";
+const EDITORS = ["manny@mallardbay.com", "coco@mallardbay.com"];
+const MAX_BULLETS_PER_PAGE = 6;
 const MAX_IMAGES_PER_PAGE = 9;
 
 const credentialsPath = ".github/scripts/googleCredentials.json";
@@ -193,9 +194,15 @@ async function getInspirationQuote(): Promise<string> {
 
 async function createSlides(grouped: any, images: any, quote: string) {
     const auth = (await authorizeWithGoogle(credentialsPath)) as any;
-    const slides = google.slides({ version: "v1", auth });
+    const slidesApi = google.slides({ version: "v1", auth });
     const presentationId = await copyTemplatePresentation(auth, TEMPLATE_ID);
-    const layoutId = "g294fac71dd6_0_36";
+    const presentationResp = await slidesApi.presentations.get({
+        presentationId,
+    });
+    const presentation = presentationResp.data;
+    // const slides = presentation.slides || [];
+    // const layoutId = await
+    // "g294fac71dd6_0_36";
 
     const titleMap = {
         features: "New Features 🚀",
@@ -207,12 +214,13 @@ async function createSlides(grouped: any, images: any, quote: string) {
     let otherSlideRequests: any[] = [];
     let followupRequests: any[] = [];
 
-    // Locate "That’s All Folks!" slide
-    const insertionIndex = await findSlideIndexByText(
-        slides,
-        presentationId,
-        "That's All Folks!"
-    );
+    // Locate "That's All Folks!" slide
+    const { insertionIndex, layoutId } =
+        getInsertionIndexAndLayouyId(presentation);
+    //     // slides,
+    //     presentationId,
+    //     "That's All Folks!"
+    // );
 
     console.log(
         `📍 Inserting group slides at index: ${insertionIndex ?? "end"}`
@@ -234,8 +242,10 @@ async function createSlides(grouped: any, images: any, quote: string) {
             groupSlideRequests.push({
                 createSlide: {
                     objectId: slideId,
-                    insertionIndex: insertionIndex ?? undefined, // ✅ HERE
-                    slideLayoutReference: { layoutId },
+                    insertionIndex: insertionIndex ?? undefined,
+                    slideLayoutReference: {
+                        predefinedLayout: "TITLE_AND_BODY",
+                    },
                     placeholderIdMappings: [
                         {
                             layoutPlaceholder: { type: "TITLE" },
@@ -283,7 +293,9 @@ async function createSlides(grouped: any, images: any, quote: string) {
         otherSlideRequests.push({
             createSlide: {
                 objectId: slideId,
-                slideLayoutReference: { layoutId },
+                slideLayoutReference: {
+                    predefinedLayout: "TITLE_AND_BODY",
+                },
                 placeholderIdMappings: [
                     {
                         layoutPlaceholder: { type: "TITLE" },
@@ -308,8 +320,8 @@ async function createSlides(grouped: any, images: any, quote: string) {
         );
     }
 
-    // Insert group slides before "That’s All Folks!"
-    await slides.presentations.batchUpdate({
+    // Insert group slides before "That's All Folks!"
+    await slidesApi.presentations.batchUpdate({
         presentationId,
         requestBody: {
             requests: groupSlideRequests,
@@ -317,7 +329,7 @@ async function createSlides(grouped: any, images: any, quote: string) {
     });
 
     // Then insert all other slides normally
-    await slides.presentations.batchUpdate({
+    await slidesApi.presentations.batchUpdate({
         presentationId,
         requestBody: {
             requests: [...otherSlideRequests, ...followupRequests],
@@ -329,43 +341,33 @@ async function createSlides(grouped: any, images: any, quote: string) {
     );
 }
 
-async function findSlideIndexByText(
-    slidesApi: any,
-    presentationId: string,
-    targetText: string
-): Promise<number | null> {
-    // Fetch the full presentation
-    const presentation = await slidesApi.presentations.get({ presentationId });
-    const slides = presentation.data.slides || [];
+function getInsertionIndexAndLayouyId(
+    presentation: slides_v1.Schema$Presentation
+) {
+    // Insert before the last slide
+    const slides = presentation.slides;
+    if (!slides) throw new Error("No slides passed");
 
-    // Normalize the target text for consistent matching
-    const normalizedTarget = targetText.toLowerCase().replace(/[’']/g, "'");
+    // Insertion index
+    const insertionIndex = slides?.length - 2;
 
-    // Loop through all slides
-    for (let i = 0; i < slides.length; i++) {
-        const elements = slides[i].pageElements || [];
+    // Layout id
+    const layouts = presentation.layouts ?? [];
 
-        // Loop through each element on the slide
-        for (const el of elements) {
-            // Get all text elements from the shape (if it exists)
-            const textRuns = el.shape?.text?.textElements || [];
+    const desiredLayoutName = "TITLE_AND_BODY"; // or whatever matches your needs
+    const layout = layouts.find((l) =>
+        l.layoutProperties?.name?.toUpperCase().includes(desiredLayoutName)
+    );
 
-            // Combine all the text chunks in this shape into a single string
-            const combinedText = textRuns
-                .map((t) => t.textRun?.content || "")
-                .join("")
-                .toLowerCase()
-                .replace(/[’']/g, "'");
-
-            // Check if the combined text contains the normalized target
-            if (combinedText.includes(normalizedTarget)) {
-                return i; // Return the index of the matching slide
-            }
-        }
+    if (!layout) {
+        throw new Error(
+            `Layout with name containing "${desiredLayoutName}" not found`
+        );
     }
 
-    // Return null if no matching slide is found
-    return null;
+    const layoutId = layout.objectId;
+
+    return { insertionIndex, layoutId };
 }
 
 function createImageSlide(slideId: string, imageUrls: string[]): any[] {
@@ -456,21 +458,28 @@ async function copyTemplatePresentation(
         `📄 Slide copied: https://docs.google.com/presentation/d/${fileId}`
     );
 
-    // await drive.permissions.create({
-    //     fileId,
-    //     requestBody: {
-    //         type: "user",
-    //         role: "writer",
-    //         emailAddress: PRESENTATION_AUTHOR,
-    //     },
-    //     fields: "id",
-    // });
+    // Set permissions for each editor
+    // TODO
+    // for (const editor of EDITORS) {
+    //     await drive.permissions.create({
+    //         fileId,
+    //         requestBody: {
+    //             type: "user",
+    //             role: "writer",
+    //             emailAddress: editor,
+    //         },
+    //         fields: "id",
+    //     });
+    // }
 
+    // Also, anyone with the link should be able to read
     await drive.permissions.create({
         fileId,
         requestBody: {
             type: "anyone",
-            role: "reader", // or "writer" if you want link-based editing
+            // TODO revert back
+            // role: "reader",
+            role: "writer",
         },
     });
 

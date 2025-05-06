@@ -56,4 +56,4 @@ logs/
 # Optional stylelint cache
 .stylelintcache
 
-.github/scripts/googleCredentials.json
+*/googleCredentials.json

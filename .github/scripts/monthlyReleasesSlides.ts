@@ -62,7 +62,7 @@ async function main(): Promise<void> {
     console.log("✅ Slide generation complete, posting to slack...");
 
     await postToSlack(
-        `✅ Monthly Product Slides created: https://docs.google.com/presentation/d/${presentationId} \n \ncc @Coco`
+        `✅ Monthly Product Slides created: https://docs.google.com/presentation/d/${presentationId} \n \n`
     );
 
     console.log("Done with slack!");
@@ -225,13 +225,7 @@ async function createSlides(grouped: any, images: any, quote: string) {
     let otherSlideRequests: any[] = [];
     let followupRequests: any[] = [];
 
-    // Locate "That's All Folks!" slide
-    const { insertionIndex, layoutId } =
-        getInsertionIndexAndLayouyId(presentation);
-    //     // slides,
-    //     presentationId,
-    //     "That's All Folks!"
-    // );
+    const insertionIndex = getInsertionIndex(presentation);
 
     console.log(
         `📍 Inserting group slides at index: ${insertionIndex ?? "end"}`
@@ -350,9 +344,7 @@ async function createSlides(grouped: any, images: any, quote: string) {
     return presentationId;
 }
 
-function getInsertionIndexAndLayouyId(
-    presentation: slides_v1.Schema$Presentation
-) {
+function getInsertionIndex(presentation: slides_v1.Schema$Presentation) {
     // Insert before the last slide
     const slides = presentation.slides;
     if (!slides) throw new Error("No slides passed");
@@ -360,23 +352,7 @@ function getInsertionIndexAndLayouyId(
     // Insertion index
     const insertionIndex = slides?.length - 1;
 
-    // Layout id
-    const layouts = presentation.layouts ?? [];
-
-    const desiredLayoutName = "TITLE_AND_BODY"; // or whatever matches your needs
-    const layout = layouts.find((l) =>
-        l.layoutProperties?.name?.toUpperCase().includes(desiredLayoutName)
-    );
-
-    if (!layout) {
-        throw new Error(
-            `Layout with name containing "${desiredLayoutName}" not found`
-        );
-    }
-
-    const layoutId = layout.objectId;
-
-    return { insertionIndex, layoutId };
+    return insertionIndex;
 }
 
 function createImageSlide(slideId: string, imageUrls: string[]): any[] {

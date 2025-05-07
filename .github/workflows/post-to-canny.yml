@@ -23,5 +23,6 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.POST_TO_CANNY_GITHUB_TOKEN }}
                   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
                   CANNY_API_KEY: ${{ secrets.CANNY_API_KEY }}
+                  UPLOADCARE_PUBLIC_KEY: ${{ secrets.UPLOADCARE_PUBLIC_KEY }}
                   GITHUB_ORG: ${{ github.repository_owner}}
               run: yarn run post:canny

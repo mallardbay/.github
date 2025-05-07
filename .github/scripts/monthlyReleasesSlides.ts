@@ -5,6 +5,8 @@ import * as path from "path";
 import OpenAI from "openai";
 import { WebClient } from "@slack/web-api";
 
+import { isBeginningOfCycle } from "./helpers";
+
 const TEMPLATE_ID = "10XaYbPMpHJuo3MdE2HEnjFE-Neh6MZo_8IjagT7Nucg";
 const EDITORS = ["manny@mallardbay.com", "coco@mallardbay.com"];
 const MAX_BULLETS_PER_PAGE = 6;
@@ -12,21 +14,7 @@ const MAX_IMAGES_PER_PAGE = 9;
 const SLACK_CHANNEL = "#dev-github-actions";
 
 const credentialsPath = ".github/scripts/googleCredentials.json";
-
-if (!process.env.OPENAI_API_KEY) {
-    throw new Error("Missing required env variable: OPENAI_API_KEY");
-}
-
-if (!process.env.CANNY_API_KEY) {
-    throw new Error("Missing required env variable: CANNY_API_KEY");
-}
-
-if (!process.env.SLACK_TOKEN) {
-    throw new Error("Missing required env variable: SLACK_TOKEN");
-}
-
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
-
 interface ChangelogEntry {
     _id: string;
     title: string;
@@ -40,7 +28,14 @@ main().catch((err) => {
 });
 
 async function main(): Promise<void> {
+    validateEnvVars();
+
     console.log("🚀 Starting changelog slide generation...");
+
+    if (!shouldRun()) {
+        console.log("Skipping run...");
+        return;
+    }
 
     const entries = await fetchRecentChangelogEntries();
     if (!entries.length) {
@@ -475,4 +470,24 @@ async function postToSlack(message) {
         channel: SLACK_CHANNEL,
         text: message,
     });
+}
+
+function shouldRun() {
+    const now = new Date();
+
+    return isBeginningOfCycle(now);
+}
+
+function validateEnvVars() {
+    if (!process.env.OPENAI_API_KEY) {
+        throw new Error("Missing required env variable: OPENAI_API_KEY");
+    }
+
+    if (!process.env.CANNY_API_KEY) {
+        throw new Error("Missing required env variable: CANNY_API_KEY");
+    }
+
+    if (!process.env.SLACK_TOKEN) {
+        throw new Error("Missing required env variable: SLACK_TOKEN");
+    }
 }

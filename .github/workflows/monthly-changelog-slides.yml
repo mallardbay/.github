@@ -3,7 +3,7 @@ name: Generate Changelog Slides
 on:
     workflow_dispatch: # Manual trigger
     schedule:
-        - cron: "0 13 * * MON" # Every Monday at 1pm UTC
+        - cron: "0 13 * * MON" # Every Monday around 8am cst, filtered further in js
 
 jobs:
     generate:

@@ -24,9 +24,6 @@ if (!uploadcarePublicKey) {
 const rehostCache = new Map<string, string>(); // GitHub URL -> Uploadcare URL
 
 main();
-// rehydrateGitHubAssetToUploadcare(
-//     "https://github.com/user-attachments/assets/20b19896-f62f-4742-84fb-904aca02e1d7"
-// ).then((url) => console.log(`url`, url));
 
 async function main(): Promise<void> {
     console.log("🚀 Generating grouped changelog...");

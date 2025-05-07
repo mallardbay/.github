@@ -444,27 +444,24 @@ async function copyTemplatePresentation(
     );
 
     // Set permissions for each editor
-    // TODO
-    // for (const editor of EDITORS) {
-    //     await drive.permissions.create({
-    //         fileId,
-    //         requestBody: {
-    //             type: "user",
-    //             role: "writer",
-    //             emailAddress: editor,
-    //         },
-    //         fields: "id",
-    //     });
-    // }
+    for (const editor of EDITORS) {
+        await drive.permissions.create({
+            fileId,
+            requestBody: {
+                type: "user",
+                role: "writer",
+                emailAddress: editor,
+            },
+            fields: "id",
+        });
+    }
 
     // Also, anyone with the link should be able to read
     await drive.permissions.create({
         fileId,
         requestBody: {
             type: "anyone",
-            // TODO revert back
-            // role: "reader",
-            role: "writer",
+            role: "reader",
         },
     });
 

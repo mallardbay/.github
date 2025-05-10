@@ -123,23 +123,44 @@ async function authorizeWithGoogle(credentialsPath: string) {
 }
 
 async function groupAndSummarizeEntries(entries: ChangelogEntry[]) {
-    const formatted = entries
-        .map(
-            (e, i) =>
-                `${i + 1}. Title: ${e.title}\nDescription: ${e.markdownDetails}`
-        )
-        .join("\n\n");
-    const prompt = `You are summarizing a product changelog. Categorize each entry as a Feature, Improvement, or Fix. For each group, write concise bullet points. Respond in JSON:\n{\n  \"features\": [\"...\"],\n  \"improvements\": [\"...\"],\n  \"fixes\": [\"...\"]\n}\n\nEntries:\n${formatted}`;
+    const BATCH_SIZE = 10;
+    const results = {
+        features: [] as string[],
+        improvements: [] as string[],
+        fixes: [] as string[],
+    };
 
-    const res = await openai.chat.completions.create({
-        model: "gpt-4",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.5,
-    });
+    // Process entries in batches
+    for (let i = 0; i < entries.length; i += BATCH_SIZE) {
+        const batch = entries.slice(i, i + BATCH_SIZE);
+        const formatted = batch
+            .map(
+                (e, idx) =>
+                    `${idx + 1}. Title: ${e.title}\nDescription: ${
+                        e.markdownDetails
+                    }`
+            )
+            .join("\n\n");
 
-    const json = res.choices[0].message.content!.trim();
-    console.log("🧩 Grouping result parsed from OpenAI response.");
-    return JSON.parse(json);
+        const prompt = `You are summarizing a product changelog. Categorize each entry as a Feature, Improvement, or Fix. For each group, write concise bullet points. Respond in JSON:\n{\n  \"features\": [\"...\"],\n  \"improvements\": [\"...\"],\n  \"fixes\": [\"...\"]\n}\n\nEntries:\n${formatted}`;
+
+        const res = await openai.chat.completions.create({
+            model: "gpt-4",
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.5,
+        });
+
+        const json = res.choices[0].message.content!.trim();
+        const batchResults = JSON.parse(json);
+
+        // Merge results
+        results.features.push(...batchResults.features);
+        results.improvements.push(...batchResults.improvements);
+        results.fixes.push(...batchResults.fixes);
+    }
+
+    console.log("🧩 Grouping results parsed from OpenAI response.");
+    return results;
 }
 
 export function extractImages(markdown: string): string[] {
@@ -475,7 +496,9 @@ async function postToSlack(message) {
 function shouldRun() {
     const now = new Date();
 
-    return isBeginningOfCycle(now);
+    // return isBeginningOfCycle(now);
+    // TODO roll back
+    return true;
 }
 
 function validateEnvVars() {

@@ -124,19 +124,56 @@ async function getCommits(
     }));
 }
 
+function chunkArray<T>(array: T[], chunkSize: number): T[][] {
+    const chunks: T[][] = [];
+    for (let i = 0; i < array.length; i += chunkSize) {
+        chunks.push(array.slice(i, i + chunkSize));
+    }
+    return chunks;
+}
+
 async function summarizeProjectPRs(
     repo: string,
     summaries: Array<{ text: string }>
 ): Promise<string> {
-    const prompt = `Write a short, friendly, summary of today's merged work in the '${repo}' project, use bullets:\n\n${summaries
-        .map((s) => s.text)
-        .join("\n")}`;
-    const res = await openai.chat.completions.create({
-        model: "gpt-4",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.4,
-    });
-    return res.choices?.[0]?.message?.content?.trim() || "⚠️ No summary.";
+    // Process summaries in chunks of 5 to stay within token limits
+    const chunks = chunkArray(summaries, 5);
+    const chunkSummaries: string[] = [];
+
+    for (const chunk of chunks) {
+        const prompt = `Write a short, friendly, summary of today's merged work in the '${repo}' project, use bullets:\n\n${chunk
+            .map((s) => s.text)
+            .join("\n")}`;
+
+        const res = await openai.chat.completions.create({
+            model: "gpt-4",
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.4,
+        });
+
+        const summary =
+            res.choices?.[0]?.message?.content?.trim() || "⚠️ No summary.";
+        chunkSummaries.push(summary);
+    }
+
+    // If we have multiple chunks, combine them into a final summary
+    if (chunkSummaries.length > 1) {
+        const finalPrompt = `Combine these summaries of work in the '${repo}' project into one cohesive summary, maintaining the bullet point format:\n\n${chunkSummaries.join(
+            "\n\n"
+        )}`;
+
+        const finalRes = await openai.chat.completions.create({
+            model: "gpt-4",
+            messages: [{ role: "user", content: finalPrompt }],
+            temperature: 0.4,
+        });
+
+        return (
+            finalRes.choices?.[0]?.message?.content?.trim() || "⚠️ No summary."
+        );
+    }
+
+    return chunkSummaries[0];
 }
 
 async function summarizePR(pr: any, commitsText: string): Promise<string> {
@@ -385,8 +422,6 @@ async function rehydrateGitHubAssetToUploadcare(
         const ext = getExtensionFromMime(contentType);
         const filename = getFilenameFromGitHubUrl(githubUrl, ext);
 
-        console.log(`>>>>>>>>`, contentType, isVideoAsset);
-
         const form = new FormData();
         form.append(
             "UPLOADCARE_PUB_KEY",
@@ -437,72 +472,3 @@ type MediaAsset = {
     url: string;
     type: "image" | "video";
 };
-
-// async function main(): Promise<void> {
-//     console.log("🚀 Generating grouped changelog...");
-//     const repos = await getRepos();
-
-//     const title = `Release Notes - Past 24 Hours`;
-//     let details = "";
-//     const allContributors = new Set<string>();
-//     const allPRLinks: string[] = [];
-
-//     for (const repo of repos) {
-//         const prs = await getMergedPRs(repo.name);
-//         if (!prs.length) continue;
-
-//         const summaries: Array<{ text: string; images: string[] }> = [];
-
-//         for (const pr of prs) {
-//             const commits = await getCommits(repo.name, pr.number);
-//             const commitsText = commits.map((c) => c.message).join("\n");
-//             const summary = await summarizePR(pr, commitsText);
-//             const images =
-//                 (pr.body || "").match(
-//                     /https:\/\/user-images\.githubusercontent\.com\/[^\s)]+/g
-//                 ) || [];
-
-//             console.log(
-//                 `📝 Summary for PR #${pr.number}: ${summary.slice(0, 60)}...`
-//             );
-//             summaries.push({ text: summary, images });
-//             allPRLinks.push(`- [${repo.name} • ${pr.title}](${pr.html_url})`);
-
-//             commits.forEach((c) => allContributors.add(c.author));
-//         }
-
-//         const projectSummary = await summarizeProjectPRs(repo.name, summaries);
-//         details += `# 📦 ${repo.name}\n\n${projectSummary}\n\n`;
-
-//         summaries.forEach(({ images }) => {
-//             images.forEach((url) => {
-//                 details += `![Image](${url})\n\n`;
-//             });
-//         });
-//     }
-
-//     if (!details.trim()) {
-//         console.log("📭 No PRs merged yesterday.");
-//         return;
-//     }
-
-//     if (allContributors.size) {
-//         const kudosTo = Array.from(allContributors).filter(
-//             (name) => name !== "semantic-release-bot"
-//         );
-//         details += `# 🙌 Kudos to\n${kudosTo
-//             .map((n) => `@${n}`)
-//             .join(", ")}\n\n`;
-//     }
-
-//     const quote = await getInspirationQuote();
-//     if (quote) {
-//         details += `> 💡 ${quote}\n\n`;
-//     }
-
-//     if (allPRLinks.length) {
-//         details += `# 🔗 Pull Requests\n${allPRLinks.join("\n")}\n\n`;
-//     }
-
-//     await postToCanny({ title, details });
-// }

@@ -493,9 +493,7 @@ async function postToSlack(message) {
 function shouldRun() {
     const now = new Date();
 
-    // return isBeginningOfCycle(now);
-    // TODO roll back
-    return true;
+    return isBeginningOfCycle(now);
 }
 
 function validateEnvVars() {

@@ -176,22 +176,30 @@ async function summarizeProjectPRs(
     return chunkSummaries[0];
 }
 
-// TODO create shared helper for chunks
 async function summarizePR(pr: any, commitsText: string): Promise<string> {
-    // Split commits into chunks of roughly 10 commits each
+    // Split commits into chunks of roughly 5 commits each
     const commitLines = commitsText.split("\n");
-    const chunks = chunkArray(commitLines, 10);
+    const chunks = chunkArray(commitLines, 5);
+
+    // Truncate PR body if it's too long
+    const maxBodyLength = 500;
+    const truncatedBody = pr.body
+        ? pr.body.length > maxBodyLength
+            ? pr.body.substring(0, maxBodyLength) + "..."
+            : pr.body
+        : "";
 
     let combinedSummary = "";
 
     for (const chunk of chunks) {
         const chunkText = chunk.join("\n");
-        const prompt = `Summarize this pull request (keep it brief) in user-facing release notes style:\n\nTitle: ${pr.title}\n\nBody: ${pr.body}\n\nCommits:\n${chunkText}`;
+        const prompt = `Summarize this pull request (keep it brief) in user-facing release notes style:\n\nTitle: ${pr.title}\n\nBody: ${truncatedBody}\n\nCommits:\n${chunkText}`;
 
         const res = await openai.chat.completions.create({
             model: "gpt-4",
             messages: [{ role: "user", content: prompt }],
             temperature: 0.4,
+            max_tokens: 500, // Limit response length
         });
 
         const chunkSummary =
@@ -201,12 +209,13 @@ async function summarizePR(pr: any, commitsText: string): Promise<string> {
 
     // If we have multiple chunks, get a final summary of the combined summaries
     if (chunks.length > 1) {
-        const finalPrompt = `Combine these summaries into one concise release note:\n\n${combinedSummary}`;
+        const finalPrompt = `Combine these summaries into one concise release note (max 2-3 sentences):\n\n${combinedSummary}`;
 
         const finalRes = await openai.chat.completions.create({
             model: "gpt-4",
             messages: [{ role: "user", content: finalPrompt }],
             temperature: 0.4,
+            max_tokens: 200, // Limit final summary length
         });
 
         return (

@@ -176,14 +176,46 @@ async function summarizeProjectPRs(
     return chunkSummaries[0];
 }
 
+// TODO create shared helper for chunks
 async function summarizePR(pr: any, commitsText: string): Promise<string> {
-    const prompt = `Summarize this pull request (keep it brief) in user-facing release notes style:\n\nTitle: ${pr.title}\n\nBody: ${pr.body}\n\nCommits:\n${commitsText}`;
-    const res = await openai.chat.completions.create({
-        model: "gpt-4",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.4,
-    });
-    return res.choices?.[0]?.message?.content?.trim() || "⚠️ No summary.";
+    // Split commits into chunks of roughly 10 commits each
+    const commitLines = commitsText.split("\n");
+    const chunks = chunkArray(commitLines, 10);
+
+    let combinedSummary = "";
+
+    for (const chunk of chunks) {
+        const chunkText = chunk.join("\n");
+        const prompt = `Summarize this pull request (keep it brief) in user-facing release notes style:\n\nTitle: ${pr.title}\n\nBody: ${pr.body}\n\nCommits:\n${chunkText}`;
+
+        const res = await openai.chat.completions.create({
+            model: "gpt-4",
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.4,
+        });
+
+        const chunkSummary =
+            res.choices?.[0]?.message?.content?.trim() || "⚠️ No summary.";
+        combinedSummary += chunkSummary + " ";
+    }
+
+    // If we have multiple chunks, get a final summary of the combined summaries
+    if (chunks.length > 1) {
+        const finalPrompt = `Combine these summaries into one concise release note:\n\n${combinedSummary}`;
+
+        const finalRes = await openai.chat.completions.create({
+            model: "gpt-4",
+            messages: [{ role: "user", content: finalPrompt }],
+            temperature: 0.4,
+        });
+
+        return (
+            finalRes.choices?.[0]?.message?.content?.trim() ||
+            combinedSummary.trim()
+        );
+    }
+
+    return combinedSummary.trim();
 }
 
 async function getInspirationQuote(): Promise<string> {

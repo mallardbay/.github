@@ -227,9 +227,6 @@ async function createSlides(grouped: any, images: any, quote: string) {
         presentationId,
     });
     const presentation = presentationResp.data;
-    // const slides = presentation.slides || [];
-    // const layoutId = await
-    // "g294fac71dd6_0_36";
 
     const titleMap = {
         features: "New Features 🚀",

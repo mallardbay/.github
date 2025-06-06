@@ -3,7 +3,7 @@ name: Weekly Story Points
 on:
     workflow_dispatch:
     schedule:
-        - cron: "0 13 * * 5" # 4pm central on Fridays
+        - cron: "0 22 * * 5" # Roughly 4pm central on Fridays
 
 jobs:
     weekly-story-points:

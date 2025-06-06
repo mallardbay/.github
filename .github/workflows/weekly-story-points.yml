@@ -1,0 +1,27 @@
+name: Weekly Story Points
+
+on:
+    workflow_dispatch:
+    schedule:
+        - cron: "0 13 * * 5" # 4pm central on Fridays
+
+jobs:
+    post-to-canny:
+        runs-on: ubuntu-latest
+        steps:
+            - name: ⬇️ Checkout repo
+              uses: actions/checkout@v3
+
+            - name: 🟢 Set up Node.js
+              uses: actions/setup-node@v3
+
+            - name: 📦 Install dependencies
+              run: yarn
+
+            - name: 🚀 Weekly Story Points Poster
+              env:
+                  GITHUB_TOKEN: ${{ secrets.POST_TO_CANNY_GITHUB_TOKEN }}
+                  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+                  GITHUB_ORG: ${{ github.repository_owner}}
+                  SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+              run: yarn run weekly:story:points

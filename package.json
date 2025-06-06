@@ -8,6 +8,7 @@
     "type": "module",
     "dependencies": {
         "@slack/web-api": "^7.9.1",
+        "canvas": "^3.1.0",
         "googleapis": "^148.0.0",
         "node-fetch": "2",
         "openai": "^4.96.2"
@@ -24,6 +25,7 @@
     "scripts": {
         "monthly:release:slides": "npx tsx .github/scripts/monthlyReleasesSlides.ts",
         "post:canny": "npx tsx .github/scripts/postToCanny.ts",
+        "weekly:story:points": "npx tsx .github/scripts/weeklyStoryPoints.ts",
         "test": "node --experimental-vm-modules ./node_modules/.bin/jest"
     }
 }

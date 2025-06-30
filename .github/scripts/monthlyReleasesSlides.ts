@@ -15,11 +15,23 @@ const SLACK_CHANNEL = "#dev-github-actions";
 
 const credentialsPath = ".github/scripts/googleCredentials.json";
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+
 interface ChangelogEntry {
     _id: string;
     title: string;
     markdownDetails?: string;
     created: string;
+}
+
+/**
+ * Validates if a URL is a valid HTTP/HTTPS URL
+ * @param url - The URL to validate
+ * @returns true if the URL is valid, false otherwise
+ */
+function isValidImageUrl(url: string): boolean {
+    return Boolean(
+        url && (url.startsWith("http://") || url.startsWith("https://"))
+    );
 }
 
 main().catch((err) => {
@@ -170,7 +182,8 @@ export function extractImages(markdown: string): string[] {
             const urlMatch = match.match(/\((.*?)\)/);
             return urlMatch ? urlMatch[1] : "";
         })
-        .filter(Boolean);
+        .filter(Boolean)
+        .filter(isValidImageUrl);
 }
 
 function collectImagesByGroup(entries: ChangelogEntry[], groups: any) {
@@ -183,6 +196,11 @@ function collectImagesByGroup(entries: ChangelogEntry[], groups: any) {
 
     for (const entry of entries) {
         const images = extractImages(entry.markdownDetails || "");
+        if (images.length > 0) {
+            console.log(
+                `📸 Found ${images.length} valid images in entry: ${entry.title}`
+            );
+        }
         const text = `${entry.title} ${
             entry.markdownDetails || ""
         }`.toLowerCase();
@@ -198,6 +216,15 @@ function collectImagesByGroup(entries: ChangelogEntry[], groups: any) {
             }
         }
     }
+
+    // Log summary of images found
+    const totalImages =
+        imageMap.features.length +
+        imageMap.improvements.length +
+        imageMap.fixes.length;
+    console.log(
+        `📊 Total valid images found: ${totalImages} (features: ${imageMap.features.length}, improvements: ${imageMap.improvements.length}, fixes: ${imageMap.fixes.length})`
+    );
 
     return imageMap;
 }
@@ -369,7 +396,22 @@ function getInsertionIndex(presentation: slides_v1.Schema$Presentation) {
 }
 
 function createImageSlide(slideId: string, imageUrls: string[]): any[] {
-    const imageElements = imageUrls.map((url, index) => {
+    // Filter out invalid URLs as a safety measure
+    const validImageUrls = imageUrls.filter(isValidImageUrl);
+
+    if (validImageUrls.length !== imageUrls.length) {
+        console.log(
+            `⚠️ Filtered out ${
+                imageUrls.length - validImageUrls.length
+            } invalid image URLs`
+        );
+        console.log(
+            `🔗 Invalid URLs:`,
+            imageUrls.filter((url) => !isValidImageUrl(url))
+        );
+    }
+
+    const imageElements = validImageUrls.map((url, index) => {
         const col = index % 3;
         const row = Math.floor(index / 3);
 

@@ -34,6 +34,58 @@ function isValidImageUrl(url: string): boolean {
     );
 }
 
+/**
+ * Validates if an image URL is accessible and returns appropriate format/size info
+ * @param url - The URL to validate
+ * @returns Promise<boolean> - true if the image is accessible
+ */
+async function isImageAccessible(url: string): Promise<boolean> {
+    try {
+        console.log(`🔍 Checking image accessibility: ${url}`);
+        const response = await fetch(url, { method: "HEAD" });
+
+        if (!response.ok) {
+            console.log(`❌ Image not accessible (${response.status}): ${url}`);
+            return false;
+        }
+
+        const contentType = response.headers.get("content-type");
+        const contentLength = response.headers.get("content-length");
+
+        console.log(
+            `✅ Image accessible: ${url} (${contentType}, ${contentLength} bytes)`
+        );
+
+        // Check if it's a supported image format
+        const supportedFormats = [
+            "image/jpeg",
+            "image/jpg",
+            "image/png",
+            "image/gif",
+            "image/webp",
+            "image/svg+xml",
+        ];
+        if (
+            !contentType ||
+            !supportedFormats.some((format) => contentType.includes(format))
+        ) {
+            console.log(`⚠️ Unsupported image format (${contentType}): ${url}`);
+            return false;
+        }
+
+        // Check if file size is reasonable (less than 10MB)
+        if (contentLength && parseInt(contentLength) > 10 * 1024 * 1024) {
+            console.log(`⚠️ Image too large (${contentLength} bytes): ${url}`);
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        console.log(`❌ Error checking image (${error.message}): ${url}`);
+        return false;
+    }
+}
+
 main().catch((err) => {
     console.error("❌ Fatal error:", err);
     process.exit(1);
@@ -59,7 +111,7 @@ async function main(): Promise<void> {
     const grouped = await groupAndSummarizeEntries(entries);
 
     console.log("🖼️ Extracting images by group...");
-    const images = collectImagesByGroup(entries, grouped);
+    const images = await collectImagesByGroup(entries, grouped);
 
     console.log("💬 Fetching inspirational quote...");
     const quote = await getInspirationQuote();
@@ -186,7 +238,7 @@ export function extractImages(markdown: string): string[] {
         .filter(isValidImageUrl);
 }
 
-function collectImagesByGroup(entries: ChangelogEntry[], groups: any) {
+async function collectImagesByGroup(entries: ChangelogEntry[], groups: any) {
     console.log("🧹 Sorting images by group...");
     const imageMap: Record<string, string[]> = {
         features: [],
@@ -211,7 +263,16 @@ function collectImagesByGroup(entries: ChangelogEntry[], groups: any) {
                     text.includes(s.split(" ")[0].toLowerCase())
                 )
             ) {
-                imageMap[type].push(...images);
+                // Validate image accessibility before adding to the group
+                for (const imageUrl of images) {
+                    if (await isImageAccessible(imageUrl)) {
+                        imageMap[type].push(imageUrl);
+                    } else {
+                        console.log(
+                            `🚫 Skipping inaccessible image: ${imageUrl}`
+                        );
+                    }
+                }
                 break;
             }
         }
@@ -223,7 +284,7 @@ function collectImagesByGroup(entries: ChangelogEntry[], groups: any) {
         imageMap.improvements.length +
         imageMap.fixes.length;
     console.log(
-        `📊 Total valid images found: ${totalImages} (features: ${imageMap.features.length}, improvements: ${imageMap.improvements.length}, fixes: ${imageMap.fixes.length})`
+        `📊 Total accessible images found: ${totalImages} (features: ${imageMap.features.length}, improvements: ${imageMap.improvements.length}, fixes: ${imageMap.fixes.length})`
     );
 
     return imageMap;
@@ -326,6 +387,9 @@ async function createSlides(grouped: any, images: any, quote: string) {
     for (let i = 0; i < allImages.length; i += MAX_IMAGES_PER_PAGE) {
         const slideId = `images_all_${imageIndex++}`;
         const chunk = allImages.slice(i, i + MAX_IMAGES_PER_PAGE);
+        console.log(
+            `📊 Creating image slide ${slideId} with ${chunk.length} images...`
+        );
         followupRequests.push(...createImageSlide(slideId, chunk));
     }
 
@@ -410,6 +474,13 @@ function createImageSlide(slideId: string, imageUrls: string[]): any[] {
             imageUrls.filter((url) => !isValidImageUrl(url))
         );
     }
+
+    console.log(
+        `🖼️ Creating image slide with ${validImageUrls.length} images:`
+    );
+    validImageUrls.forEach((url, index) => {
+        console.log(`  ${index + 1}. ${url}`);
+    });
 
     const imageElements = validImageUrls.map((url, index) => {
         const col = index % 3;

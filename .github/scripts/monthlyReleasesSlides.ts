@@ -11,6 +11,7 @@ const TEMPLATE_ID = "10XaYbPMpHJuo3MdE2HEnjFE-Neh6MZo_8IjagT7Nucg";
 const EDITORS = ["manny@mallardbay.com", "coco@mallardbay.com"];
 const MAX_BULLETS_PER_PAGE = 6;
 const MAX_IMAGES_PER_PAGE = 9;
+const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 const SLACK_CHANNEL = "#dev-github-actions";
 
 const credentialsPath = ".github/scripts/googleCredentials.json";
@@ -62,7 +63,7 @@ async function isImageAccessible(url: string): Promise<boolean> {
             "image/jpg",
             "image/png",
             "image/gif",
-            "image/webp",
+            // "image/webp",
             "image/svg+xml",
         ];
         if (
@@ -74,7 +75,7 @@ async function isImageAccessible(url: string): Promise<boolean> {
         }
 
         // Check if file size is reasonable (less than 10MB)
-        if (contentLength && parseInt(contentLength) > 10 * 1024 * 1024) {
+        if (contentLength && parseInt(contentLength) > MAX_IMAGE_SIZE_BYTES) {
             console.log(`⚠️ Image too large (${contentLength} bytes): ${url}`);
             return false;
         }

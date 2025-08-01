@@ -14,3 +14,6 @@ export function isBeginningOfCycle(date: Date): boolean {
 function isMonday(date: Date): boolean {
     return date.getDay() === 1;
 }
+
+// Slack configuration
+export const SLACK_CHANNEL = "#dev-github-actions";

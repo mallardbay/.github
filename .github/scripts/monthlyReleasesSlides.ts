@@ -5,14 +5,13 @@ import * as path from "path";
 import OpenAI from "openai";
 import { WebClient } from "@slack/web-api";
 
-import { isBeginningOfCycle } from "./helpers";
+import { isBeginningOfCycle, SLACK_CHANNEL } from "./helpers";
 
 const TEMPLATE_ID = "10XaYbPMpHJuo3MdE2HEnjFE-Neh6MZo_8IjagT7Nucg";
 const EDITORS = ["manny@mallardbay.com", "coco@mallardbay.com"];
 const MAX_BULLETS_PER_PAGE = 6;
 const MAX_IMAGES_PER_PAGE = 9;
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
-const SLACK_CHANNEL = "#dev-github-actions";
 
 const credentialsPath = ".github/scripts/googleCredentials.json";
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });

@@ -1,9 +1,12 @@
 import fetch from "node-fetch";
 import OpenAI from "openai";
 import FormData from "form-data";
+import { WebClient } from "@slack/web-api";
+import { SLACK_CHANNEL } from "./helpers";
 
 const githubToken: string | undefined = process.env.GITHUB_TOKEN;
 const uploadcarePublicKey = process.env.UPLOADCARE_PUBLIC_KEY;
+const slackToken: string | undefined = process.env.SLACK_TOKEN;
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
 const org: string | undefined = process.env.GITHUB_ORG;
 
@@ -19,6 +22,11 @@ if (!org) {
 
 if (!uploadcarePublicKey) {
     throw new Error("❌ Missing UPLOADCARE_PUBLIC_KEY");
+}
+
+if (!slackToken) {
+    console.error("❌ Missing SLACK_TOKEN environment variable.");
+    process.exit(1);
 }
 
 const rehostCache = new Map<string, string>(); // GitHub URL -> Uploadcare URL
@@ -51,7 +59,9 @@ async function main(): Promise<void> {
     details += await formatQuote();
     details += formatPRLinks(allPRLinks);
 
-    await postToCanny({ title: `Release Notes - Past 24 Hours`, details });
+    const title = `Release Notes - Past 24 Hours`;
+    const cannyEntryId = await postToCanny({ title, details });
+    await postToSlack(cannyEntryId, title);
 }
 
 function mergedInLast24Hours(dateStr: string): boolean {
@@ -244,7 +254,7 @@ async function postToCanny({
 }: {
     title: string;
     details: string;
-}): Promise<void> {
+}): Promise<string> {
     const postData = {
         apiKey: process.env.CANNY_API_KEY || "",
         title,
@@ -278,6 +288,31 @@ async function postToCanny({
     }
 
     console.log("✅ Posted to Canny:", result.id);
+    return result.id;
+}
+
+async function postToSlack(cannyEntryId: string, title: string): Promise<void> {
+    const slack = new WebClient(slackToken);
+    const cannyUrl = `https://canny.io/entries/${cannyEntryId}`;
+
+    const message = `📝 *New Release Notes Draft*\n\n*${title}*\n\nA new draft entry has been created in Canny. You can review and publish it here:\n${cannyUrl}`;
+
+    try {
+        const result = await slack.chat.postMessage({
+            channel: SLACK_CHANNEL,
+            text: message,
+            unfurl_links: false, // Prevent link preview to keep message clean
+        });
+
+        if (!result.ok) {
+            console.error("❌ Slack error:", result.error);
+            return;
+        }
+
+        console.log("✅ Posted to Slack successfully");
+    } catch (error) {
+        console.error("❌ Error posting to Slack:", error);
+    }
 }
 
 async function findPRsByCommit(repo: string, sha: string): Promise<Array<any>> {

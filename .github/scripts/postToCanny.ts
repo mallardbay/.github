@@ -151,9 +151,19 @@ async function summarizeProjectPRs(
     const chunkSummaries: string[] = [];
 
     for (const chunk of chunks) {
-        const prompt = `Write a short, friendly, summary of today's merged work in the '${repo}' project, use bullets:\n\n${chunk
-            .map((s) => s.text)
-            .join("\n")}`;
+        const promptLines = [
+            `You are writing user-facing release notes for the '${repo}' project.`,
+            "Focus on what users will experience and benefit from.",
+            "Avoid technical jargon, internal references, or ticket numbers.",
+            "Write in a friendly, engaging tone that highlights user value.",
+            "Use bullet points for clarity.",
+            "",
+            "Here are the changes to summarize:",
+            "",
+            chunk.map((s) => s.text).join("\n"),
+        ];
+
+        const prompt = promptLines.join("\n");
 
         const res = await openai.chat.completions.create({
             model: "gpt-4",
@@ -168,9 +178,18 @@ async function summarizeProjectPRs(
 
     // If we have multiple chunks, combine them into a final summary
     if (chunkSummaries.length > 1) {
-        const finalPrompt = `Combine these summaries of work in the '${repo}' project into one cohesive summary, maintaining the bullet point format:\n\n${chunkSummaries.join(
-            "\n\n"
-        )}`;
+        const finalPromptLines = [
+            `Combine these summaries of work in the '${repo}' project into one cohesive, user-facing summary.`,
+            "Focus on the overall user experience and benefits.",
+            "Maintain bullet point format for readability.",
+            "Keep it concise and engaging.",
+            "",
+            "Summaries to combine:",
+            "",
+            chunkSummaries.join("\n\n"),
+        ];
+
+        const finalPrompt = finalPromptLines.join("\n");
 
         const finalRes = await openai.chat.completions.create({
             model: "gpt-4",
@@ -203,7 +222,21 @@ async function summarizePR(pr: any, commitsText: string): Promise<string> {
 
     for (const chunk of chunks) {
         const chunkText = chunk.join("\n");
-        const prompt = `Summarize this pull request (keep it brief) in user-facing release notes style:\n\nTitle: ${pr.title}\n\nBody: ${truncatedBody}\n\nCommits:\n${chunkText}`;
+        const promptLines = [
+            "You are writing user-facing release notes. Focus on what users will experience and benefit from.",
+            "Avoid technical jargon, internal references, ticket numbers, or implementation details.",
+            "Write in a friendly, engaging tone that highlights user value and improvements.",
+            "Keep it brief and impactful.",
+            "",
+            "Pull Request Details:",
+            `Title: ${pr.title}`,
+            `Description: ${truncatedBody}`,
+            "",
+            "Recent commits:",
+            chunkText,
+        ];
+
+        const prompt = promptLines.join("\n");
 
         const res = await openai.chat.completions.create({
             model: "gpt-4",
@@ -219,7 +252,18 @@ async function summarizePR(pr: any, commitsText: string): Promise<string> {
 
     // If we have multiple chunks, get a final summary of the combined summaries
     if (chunks.length > 1) {
-        const finalPrompt = `Combine these summaries into one concise release note (max 2-3 sentences):\n\n${combinedSummary}`;
+        const finalPromptLines = [
+            "Combine these summaries into one concise, user-facing release note (max 2-3 sentences).",
+            "Focus on the overall user experience and benefits.",
+            "Avoid technical details and internal references.",
+            "Make it engaging and valuable for end users.",
+            "",
+            "Summaries to combine:",
+            "",
+            combinedSummary,
+        ];
+
+        const finalPrompt = finalPromptLines.join("\n");
 
         const finalRes = await openai.chat.completions.create({
             model: "gpt-4",
@@ -238,8 +282,20 @@ async function summarizePR(pr: any, commitsText: string): Promise<string> {
 }
 
 async function getInspirationQuote(): Promise<string> {
-    const prompt =
-        "Give me an inspiring quote about building products, startups, leadership.";
+    const promptLines = [
+        "Provide an inspiring quote that would motivate a development team.",
+        "Focus on themes like:",
+        "- Building great products",
+        "- Team collaboration",
+        "- Innovation and progress",
+        "- User impact",
+        "",
+        "Keep it concise and impactful (1-2 sentences max).",
+        "Make it relevant for a daily release notes context.",
+    ];
+
+    const prompt = promptLines.join("\n");
+
     const res = await openai.chat.completions.create({
         model: "gpt-4",
         messages: [{ role: "user", content: prompt }],

@@ -3,7 +3,7 @@ name: Post Daily AI Summaries to Canny
 on:
     workflow_dispatch:
     schedule:
-        - cron: "0 13 * * *" # ~8am central
+        - cron: "0 11 * * *" # ~6am central
 
 jobs:
     post-to-canny:

@@ -349,7 +349,7 @@ async function postToCanny({
 
 async function postToSlack(cannyEntryId: string, title: string): Promise<void> {
     const slack = new WebClient(slackToken);
-    const cannyUrl = `https://canny.io/entries/${cannyEntryId}`;
+    const cannyUrl = `https://mallard-bay.canny.io/admin/changelog`;
 
     const message = `📝 *New Release Notes Draft*\n\n*${title}*\n\nA new draft entry has been created in Canny. You can review and publish it here:\n${cannyUrl}`;
 
